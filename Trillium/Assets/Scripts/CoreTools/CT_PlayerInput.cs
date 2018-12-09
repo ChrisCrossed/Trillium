@@ -2,20 +2,42 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+enum JumpButtonState
+{
+    Off,
+    Held,
+    Pressed
+}
+
+public struct PlayerInputObject
+{
+    private float _f_zDir;
+    private float _f_xDir;
+
+    public Vector3 InputVector { internal set; get; }
+
+    public bool JumpButtonPressed { internal set; get; }
+}
+
 public class CT_PlayerInput : MonoBehaviour
 {
     // Private Vectors
-    private Vector3 v3_InputVector;
+    internal PlayerInputObject playerInput;
+
+    // Private Information
+    private JumpButtonState jumpButtonState;
 
 	// Use this for initialization
 	internal virtual void Start()
     {
-        // Reset Vectors
-        v3_InputVector = new Vector3();
+        // Reset Player Objects
+        playerInput = new PlayerInputObject();
+        jumpButtonState = new JumpButtonState();
 	}
 
-    void EvaluateInputVector()
+    internal void EvaluateInput()
     {
+        #region Input Vector3
         Vector3 tempVector = new Vector3();
 
         // Evaluate input & assign to vector
@@ -25,25 +47,43 @@ public class CT_PlayerInput : MonoBehaviour
             tempVector.x = -1.0f;
 
         if (Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
-            tempVector.y = -1.0f;
+            tempVector.z = 1.0f;
         else if (Input.GetKey(KeyCode.D) && !Input.GetKey(KeyCode.A))
-            tempVector.y = 1.0f;
+            tempVector.z = -1.0f;
 
         // Normalize Vector
         tempVector.Normalize();
 
         // Assign temp vector to variable
-        v3_InputVector = tempVector;
+        playerInput.InputVector = tempVector;
+        #endregion
+
+        #region Jump Button
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            if (playerInput.JumpButtonPressed)
+                jumpButtonState = JumpButtonState.Held;
+            else jumpButtonState = JumpButtonState.Pressed;
+
+            playerInput.JumpButtonPressed = true;
+        }
+        else
+        {
+            jumpButtonState = JumpButtonState.Off;
+
+            playerInput.JumpButtonPressed = false;
+        }
+        #endregion
     }
 
     internal Vector3 GetInputVector()
     {
-        return v3_InputVector;
+        // Return playerInput
+        return playerInput.InputVector;
     }
-	
-	// Update is called once per frame
-	internal virtual void Update()
+    internal JumpButtonState GetJumpButton()
     {
-        EvaluateInputVector();
-	}
+        // Return custom enum
+        return jumpButtonState;
+    }
 }
